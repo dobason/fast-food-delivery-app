@@ -7,7 +7,7 @@ import HeroSection from '../components/HeroSection.jsx';   // Import HeroSection
 
 const HomePage = () => {
     // Khởi tạo state là mảng rỗng [] để tránh lỗi null
-    const [products, setProducts] = useState([]); 
+    const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -16,15 +16,15 @@ const HomePage = () => {
             try {
                 setLoading(true);
                 const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/products`);
-                
+
                 // --- ĐÂY LÀ DÒNG QUAN TRỌNG ĐỂ DEBUG ---
-                console.log("🔥 DỮ LIỆU API TRẢ VỀ:", response.data); 
+                console.log("🔥 DỮ LIỆU API TRẢ VỀ:", response.data);
 
                 // Logic thông minh: Tự dò tìm mảng sản phẩm
                 // Trường hợp 1: API trả về trực tiếp mảng [Product1, Product2...]
                 // Trường hợp 2: API trả về object { products: [...], page: 1 }
                 let productData = [];
-                
+
                 if (Array.isArray(response.data)) {
                     productData = response.data;
                 } else if (response.data && Array.isArray(response.data.products)) {

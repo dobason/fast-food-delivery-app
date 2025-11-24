@@ -45,7 +45,7 @@ const OrderTrackingPage = () => {
     const customerLocation = [10.7626, 106.6602];
 
     // URL Socket
-    const ORDER_SOCKET_URL = 'http://localhost:3003'; 
+    const ORDER_SOCKET_URL = 'http://10.0.0.77:3003';
     const DELIVERY_SOCKET_URL = import.meta.env.VITE_DELIVERY_SOCKET_URL || 'http://localhost:3005';
 
     useEffect(() => {

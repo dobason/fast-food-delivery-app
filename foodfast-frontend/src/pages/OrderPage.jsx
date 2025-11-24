@@ -22,7 +22,7 @@ const OrderPage = () => {
 
     const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
     const DELIVERY_URL = 'http://localhost:3005';
-    const ORDER_SOCKET_URL = 'http://localhost:3003'; // URL Socket Order
+    const ORDER_SOCKET_URL = 'http://10.0.0.77:3003';
 
     useEffect(() => {
         const fetchOrder = async () => {

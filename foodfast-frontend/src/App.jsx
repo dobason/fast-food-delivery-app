@@ -26,6 +26,9 @@ import ProductEditPage from './pages/admin/ProductEditPage.jsx';
 import OrderListAdminPage from './pages/admin/OrderListAdminPage.jsx';
 import UserListAdminPage from './pages/admin/UserListAdminPage.jsx';
 import BranchListAdminPage from './pages/admin/BranchListAdminPage.jsx';
+import BranchEditPage from './pages/admin/BranchEditPage.jsx';
+import DroneListAdminPage from './pages/admin/DroneListAdminPage';
+import DroneEditPage from './pages/admin/DroneEditPage';
 
 function App() {
     const { userInfo } = useContext(AuthContext);
@@ -51,9 +54,9 @@ function App() {
     // Logic ẩn Modal thông minh hơn:
     // 1. Nếu là Admin -> Ẩn
     // 2. Nếu đang ở trang Login hoặc Register -> Ẩn (để người dùng đăng nhập đã)
-    const shouldHideModal = userInfo?.isAdmin || 
-                            location.pathname === '/login' || 
-                            location.pathname === '/register';
+    const shouldHideModal = userInfo?.isAdmin ||
+        location.pathname === '/login' ||
+        location.pathname === '/register';
 
     return (
         <div className="min-h-screen flex flex-col bg-gray-50 font-sans">
@@ -121,23 +124,30 @@ function App() {
                     <Route path="/shipping" element={<ProtectedRoute><ShippingPage /></ProtectedRoute>} />
                     <Route path="/order/:id" element={<ProtectedRoute><OrderPage /></ProtectedRoute>} />
                     <Route path="/myorders" element={<ProtectedRoute><OrderHistoryPage /></ProtectedRoute>} />
-                    
+
                     {/* ĐÃ SỬA LẠI PATH CHO KHỚP VỚI LINK TRONG ORDERPAGE */}
                     <Route path="/order-tracking/:id" element={<ProtectedRoute><OrderTrackingPage /></ProtectedRoute>} />
                     <Route path="/track/:id" element={<ProtectedRoute><OrderTrackingPage /></ProtectedRoute>} /> {/* Giữ cả 2 cho chắc */}
-                    
+
                     <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
 
                     {/* --- ROUTES ADMIN --- */}
                     {/* Thêm route dashboard mặc định để redirect */}
                     <Route path="/admin/dashboard" element={<AdminRoute><OrderListAdminPage /></AdminRoute>} />
-                    
+
                     <Route path="/admin/orderlist" element={<AdminRoute><OrderListAdminPage /></AdminRoute>} />
                     <Route path="/admin/productlist" element={<AdminRoute><ProductListAdminPage /></AdminRoute>} />
                     <Route path="/admin/product/:id/edit" element={<AdminRoute><ProductEditPage /></AdminRoute>} />
                     <Route path="/admin/product/create" element={<AdminRoute><ProductEditPage /></AdminRoute>} />
                     <Route path="/admin/userlist" element={<AdminRoute><UserListAdminPage /></AdminRoute>} />
                     <Route path="/admin/branchlist" element={<AdminRoute><BranchListAdminPage /></AdminRoute>} />
+                    <Route path="/admin/branch/create" element={<AdminRoute><BranchEditPage /></AdminRoute>} />
+                    <Route path="/admin/branch/:id/edit" element={<AdminRoute><BranchEditPage /></AdminRoute>} />
+
+                    {/* Drone Routes */}
+                    <Route path="/admin/dronelist" element={<AdminRoute><DroneListAdminPage /></AdminRoute>} />
+                    <Route path="/admin/drone/create" element={<AdminRoute><DroneEditPage /></AdminRoute>} />
+                    <Route path="/admin/drone/:id/edit" element={<AdminRoute><DroneEditPage /></AdminRoute>} />
                 </Routes>
             </main>
         </div>
