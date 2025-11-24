@@ -1,0 +1,135 @@
+version: '3.8'
+
+services:
+  # 1. API GATEWAY
+  api-gateway:
+    build:
+      context: ./api-gateway
+    container_name: api-gateway
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+    depends_on:
+      - user-service
+      - product-service
+      - order-service
+      - payment-service
+      - delivery-service
+    networks:
+      - foodfast-network
+
+  # 2. USER SERVICE
+  user-service:
+    build:
+      context: ./user-service
+    container_name: user-service
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      # Đã cập nhật link Atlas
+      - MONGO_URI=mongodb+srv://admin:123456.@cluster0.edqk6c9.mongodb.net/foodfast-user-service?appName=Cluster0
+      - JWT_SECRET=${JWT_SECRET}
+    networks:
+      - foodfast-network
+
+  # 3. PRODUCT SERVICE
+  product-service:
+    build:
+      context: ./product-service
+    container_name: product-service
+    ports:
+      - "3002:3002"
+    environment:
+      - PORT=3002
+      # Đã cập nhật link Atlas
+      - MONGO_URI=mongodb+srv://admin:123456.@cluster0.edqk6c9.mongodb.net/foodfast-product-service?appName=Cluster0
+      - JWT_SECRET=${JWT_SECRET}
+    networks:
+      - foodfast-network
+
+  # 4. ORDER SERVICE
+  order-service:
+    build:
+      context: ./order-service
+    container_name: order-service
+    ports:
+      - "3003:3003"
+    environment:
+      - PORT=3003
+      # Đã cập nhật link Atlas
+      - MONGO_URI=mongodb+srv://admin:123456.@cluster0.edqk6c9.mongodb.net/foodfast-order-service?appName=Cluster0
+      - JWT_SECRET=${JWT_SECRET}
+      - PRODUCT_SERVICE_URL=http://product-service:3002
+    depends_on:
+      - product-service
+    networks:
+      - foodfast-network
+
+  # 5. PAYMENT SERVICE
+  payment-service:
+    build:
+      context: ./payment-service
+    container_name: payment-service
+    ports:
+      - "3004:3004"
+    environment:
+      - PORT=3004
+      # Đã thêm link Atlas cho Payment
+      - MONGO_URI=mongodb+srv://admin:123456.@cluster0.edqk6c9.mongodb.net/foodfast-payment-service?appName=Cluster0
+      - ORDER_SERVICE_URL=http://order-service:3003
+    depends_on:
+      - order-service
+    networks:
+      - foodfast-network
+
+  # 6. DELIVERY SERVICE
+  delivery-service:
+    build:
+      context: ./delivery-service
+    container_name: delivery-service
+    ports:
+      - "3005:3005"
+    environment:
+      - PORT=3005
+      # Đã cập nhật link Atlas
+      - MONGO_URI=mongodb+srv://admin:123456.@cluster0.edqk6c9.mongodb.net/foodfast-delivery-service?appName=Cluster0
+      - ORDER_SERVICE_URL=http://order-service:3003
+    depends_on:
+      - order-service
+    networks:
+      - foodfast-network
+
+  # 7. BRANCH SERVICE
+  branch-service:
+    build: 
+      context: ./branch-service
+    container_name: foodfast_branch_service
+    ports:
+      - "3006:3006"
+    environment:
+      - PORT=3006
+      # Đã cập nhật link Atlas
+      - MONGO_URI=mongodb+srv://admin:123456.@cluster0.edqk6c9.mongodb.net/foodfast-branch-service?appName=Cluster0
+    networks:
+      - foodfast-network
+
+  # 8. DATABASE (MongoDB Local) - ĐÃ TẮT VÌ DÙNG ATLAS
+  # mongo:
+  #   image: mongo:latest
+  #   container_name: mongo-db
+  #   ports:
+  #     - "27018:27017"
+  #   volumes:
+  #     - mongo-data:/data/db
+  #   networks:
+  #     - foodfast-network
+
+networks:
+  foodfast-network:
+    driver: bridge
+
+# volumes:
+#   mongo-data:
+#     driver: local
