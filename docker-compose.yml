@@ -101,7 +101,7 @@ services:
   branch-service:
     build: 
       context: ./foodfast-backend/branch-service
-    container_name: foodfast_branch_service
+    container_name: branch-service
     ports:
       - "3006:3006"
     environment:
