@@ -130,12 +130,12 @@ const OrderListAdminPage = () => {
                                 ))}
                             </select>
                         </div>
-                    ) : (
-                        // Hiển thị cho Branch Manager
-                        <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg font-semibold shadow-sm">
-                            🔒 Đang quản lý chi nhánh của bạn
+                    ) 
+                    : (
+                        <div className=" text-blue-800 px-4 py-2 rounded-lg font-semibold shadow-sm">
                         </div>
-                    )}
+                    )
+                }
                 </div>
 
                 {loading ? (
@@ -182,11 +182,11 @@ const OrderListAdminPage = () => {
                                         <td className="px-6 py-4">
                                             {order.isPaid ? (
                                                 <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">
-                                                    Đã TT
+                                                    Đã Thanh Toán
                                                 </span>
                                             ) : (
                                                 <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">
-                                                    Chưa TT
+                                                    Chưa Thanh Toán
                                                 </span>
                                             )}
                                         </td>

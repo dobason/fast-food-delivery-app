@@ -34,32 +34,19 @@ const AdminMenu = () => {
                         🍔 Sản Phẩm
                     </Link>
 
-                    {/* Chỉ Super Admin mới thấy Quản lý Người dùng & Chi nhánh */}
-                    {/* Chỉ Super Admin mới thấy Quản lý Người dùng & Chi nhánh */}
-                    {isSuperAdmin && (
-                        <>
-                            <Link
-                                to="/admin/userlist"
-                                className={`px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all ${isActive('/admin/user')}`}
-                            >
-                                👥 Người Dùng
-                            </Link>
-
-                            <Link
-                                to="/admin/branchlist"
-                                className={`px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all ${isActive('/admin/branch')}`}
-                            >
-                                🏢 Chi Nhánh
-                            </Link>
-                        </>
-                    )}
-
                     {/* Drone Management - Visible to all Admins (Super Admin & Managers) */}
                     <Link
                         to="/admin/dronelist"
                         className={`px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all ${isActive('/admin/drone')}`}
                     >
                         🚁 Drone
+                    </Link>
+
+                    <Link
+                        to="/admin/branchlist"
+                        className={`px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all ${isActive('/admin/branch')}`}
+                    >
+                        🏢 Chi Nhánh
                     </Link>
                 </div>
             </div>

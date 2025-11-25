@@ -81,7 +81,7 @@ const OrderPage = () => {
           (orderData.status === 'READY_TO_SHIP' || orderData.status === 'PREPARING')
         ) {
           try {
-            const { data: droneData } = await axios.get(`${DELIVERY_URL}/api/delivery/drones`);
+            const { data: droneData } = await axios.get(`${DELIVERY_URL}/drones`);
             setDrones(droneData);
           } catch (err) {
             console.error('Lỗi kết nối Delivery Service');
@@ -125,7 +125,7 @@ const OrderPage = () => {
 
       // Nếu chuyển sang READY_TO_SHIP -> Load drone ngay
       if (newStatus === 'READY_TO_SHIP') {
-        const { data: droneData } = await axios.get(`${DELIVERY_URL}/api/delivery/drones`);
+        const { data: droneData } = await axios.get(`${DELIVERY_URL}/drones`);
         setDrones(droneData);
       }
     } catch (err) {
