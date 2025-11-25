@@ -53,9 +53,24 @@ const OrderTrackingPage = () => {
   } = useVietMapGeocode();
 
 
-  // URL Socket
-  const ORDER_SOCKET_URL = 'http://10.0.0.77:3003';
-  const DELIVERY_SOCKET_URL = import.meta.env.VITE_DELIVERY_SOCKET_URL || 'http://localhost:3005';
+  // Lấy IP chuẩn từ file .env (http://10.0.0.130:3000)
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+// 1. API URL: Trỏ về Gateway
+const API_URL = BASE_URL;
+
+// 2. Delivery URL:
+// Thay vì gọi thẳng port 3005, hãy gọi qua Gateway (/api/delivery)
+// Gateway sẽ tự chuyển tiếp vào trong. Như vậy đỡ bị lỗi Firewall chặn port 3005.
+const DELIVERY_URL = `${BASE_URL}/api/delivery`;
+
+// 3. Socket URL:
+// Lúc nãy chúng ta đã cài Socket.io vào Gateway (Port 3000)
+// Nên bây giờ Socket cũng dùng chung đường với API luôn.
+const ORDER_SOCKET_URL = BASE_URL;
+
+// --- THÊM DÒNG NÀY VÀO ---
+const DELIVERY_SOCKET_URL = BASE_URL;
 
   // Tọa độ giả lập (Mặc định HCM)
   const restaurantLocation = [10.7626, 106.6602];

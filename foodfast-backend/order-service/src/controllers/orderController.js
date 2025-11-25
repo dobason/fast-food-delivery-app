@@ -4,8 +4,8 @@ import axios from 'axios';
 // Lấy URL Product Service từ biến môi trường (chuẩn Docker)
 const PRODUCT_SERVICE_URL = process.env.PRODUCT_SERVICE_URL || 'http://product-service:3002/api/products';
 
-// @desc    Tạo đơn hàng mới
-// @route   POST /
+// @desc    Tạo đơn hàng mới
+// @route   POST /
 export const createOrder = async (req, res) => {
     try {
         const { userId, orderItems, shippingAddress, branchId, paymentMethod } = req.body;
@@ -54,8 +54,8 @@ export const createOrder = async (req, res) => {
             branchId: branchId,
             orderItems: itemsToSave,
             shippingAddress: {
-                fullName: shippingAddress?.fullName || "", // <--- THÊM
-                email: shippingAddress?.email || "",       // <--- THÊM
+                fullName: shippingAddress?.fullName || "",
+                email: shippingAddress?.email || "",
                 address: shippingAddress?.address || "",
                 city: shippingAddress?.city || "",
                 phone: shippingAddress?.phone || "",
@@ -70,11 +70,10 @@ export const createOrder = async (req, res) => {
 
         const createdOrder = await order.save();
 
-        if (req.io) {
-            req.io.to(branchId).emit('new_order', createdOrder);
-            req.io.emit('admin_data_update');
-        }
-
+        // Gửi socket thông báo đơn mới (nếu cần, có thể dùng cơ chế gọi sang Gateway tương tự updateOrderStatus)
+        // Hiện tại giữ nguyên logic cũ nếu req.io có sẵn (tuy nhiên trong kiến trúc microservice qua Gateway, req.io thường không có ở đây)
+        // Tốt nhất là nên gọi sang Gateway như bên dưới updateOrderStatus nếu muốn đồng bộ hoàn toàn.
+        
         res.status(201).json(createdOrder);
 
     } catch (error) {
@@ -83,8 +82,8 @@ export const createOrder = async (req, res) => {
     }
 };
 
-// @desc    Lấy danh sách đơn hàng của User
-// @route   GET /myorders/:userId
+// @desc    Lấy danh sách đơn hàng của User
+// @route   GET /myorders/:userId
 export const getMyOrders = async (req, res) => {
     try {
         const orders = await Order.find({ userId: req.params.userId }).sort({ createdAt: -1 });
@@ -94,8 +93,8 @@ export const getMyOrders = async (req, res) => {
     }
 };
 
-// @desc    Lấy chi tiết 1 đơn hàng
-// @route   GET /:id
+// @desc    Lấy chi tiết 1 đơn hàng
+// @route   GET /:id
 export const getOrderById = async (req, res) => {
     try {
         const order = await Order.findById(req.params.id);
@@ -109,8 +108,8 @@ export const getOrderById = async (req, res) => {
     }
 };
 
-// @desc    Lấy tất cả đơn hàng (Admin)
-// @route   GET /all
+// @desc    Lấy tất cả đơn hàng (Admin)
+// @route   GET /all
 export const getAllOrders = async (req, res) => {
     try {
         const { branchId } = req.query;
@@ -123,8 +122,8 @@ export const getAllOrders = async (req, res) => {
     }
 };
 
-// @desc    Cập nhật thanh toán (User trả tiền)
-// @route   PUT /:id/pay
+// @desc    Cập nhật thanh toán (User trả tiền)
+// @route   PUT /:id/pay
 export const updateOrderToPaid = async (req, res) => {
     try {
         const order = await Order.findById(req.params.id);
@@ -136,14 +135,27 @@ export const updateOrderToPaid = async (req, res) => {
             
             const updatedOrder = await order.save();
             
-            // Bắn socket thông báo
-            if (req.io) {
-                req.io.emit('admin_data_update');
-                req.io.to(req.params.id).emit('status_update', { 
-                    status: 'PAID_WAITING_PROCESS',
-                    isPaid: true
+            // --- GỌI SANG GATEWAY ĐỂ BẮN SOCKET ---
+            try {
+                await axios.post('http://api-gateway:3000/socket/emit', {
+                    event: 'status_update',
+                    room: req.params.id, 
+                    data: { 
+                        status: 'PAID_WAITING_PROCESS',
+                        isPaid: true,
+                        _id: req.params.id
+                    }
                 });
+                // Cũng báo cho Admin biết có thay đổi
+                await axios.post('http://api-gateway:3000/socket/emit', {
+                    event: 'admin_data_update',
+                    data: { message: 'Order paid' }
+                });
+            } catch (socketError) {
+                console.error("Socket Emit Error (Payment):", socketError.message);
             }
+            // --------------------------------------
+
             res.json(updatedOrder);
         } else {
             res.status(404).json({ message: 'Không tìm thấy đơn hàng' });
@@ -154,8 +166,8 @@ export const updateOrderToPaid = async (req, res) => {
     }
 };
 
-// @desc    Cập nhật trạng thái đơn hàng
-// @route   PUT /:id/status
+// @desc    Cập nhật trạng thái đơn hàng
+// @route   PUT /:id/status
 export const updateOrderStatus = async (req, res) => {
     try {
         const order = await Order.findById(req.params.id);
@@ -166,15 +178,39 @@ export const updateOrderStatus = async (req, res) => {
             const updatedOrder = await order.save({ validateModifiedOnly: true });
             // ---------------------------------------
             
-            if (req.io) {
-                try {
-                    req.io.emit('admin_data_update');
-                    req.io.to(req.params.id).emit('status_update', { 
+            // --- GỌI SANG GATEWAY ĐỂ BẮN SOCKET (CODE MỚI) ---
+            try {
+                console.log(`📡 Sending socket event for order ${order._id} to Gateway...`);
+                
+                // 1. Gửi cập nhật vào phòng riêng của đơn hàng (cho User & Admin đang xem chi tiết)
+                await axios.post('http://api-gateway:3000/socket/emit', {
+                    event: 'status_update',
+                    room: req.params.id, // Room ID chính là Order ID
+                    data: { 
+                        status: updatedOrder.status,
+                        droneId: updatedOrder.droneId,
+                        _id: updatedOrder._id
+                    }
+                });
+
+                // 2. Gửi cập nhật chung cho danh sách Admin (để list tự reload)
+                await axios.post('http://api-gateway:3000/socket/emit', {
+                    event: 'status_update', // Hoặc 'admin_data_update' tùy frontend hứng
+                    // Không truyền room => Gửi broadcast tất cả
+                    data: { 
+                        _id: updatedOrder._id,
                         status: updatedOrder.status,
                         droneId: updatedOrder.droneId
-                    });
-                } catch (socketError) { console.error("Socket Error:", socketError.message); }
+                        // Có thể truyền thêm thông tin để list update nhanh
+                    }
+                });
+                
+                console.log("✅ Socket sent successfully");
+            } catch (socketError) { 
+                console.error("⚠️ Socket Error (Gateway unreachable?):", socketError.message); 
             }
+            // -----------------------------------------------------
+
             res.json(updatedOrder);
         } else {
             res.status(404).json({ message: 'Không tìm thấy đơn hàng' });
@@ -185,8 +221,8 @@ export const updateOrderStatus = async (req, res) => {
     }
 };
 
-// @desc    Gán Drone giao hàng (Admin dùng)
-// @route   PUT /:id/assign-drone
+// @desc    Gán Drone giao hàng (Admin dùng)
+// @route   PUT /:id/assign-drone
 export const assignDrone = async (req, res) => {
     try {
         const order = await Order.findById(req.params.id);
@@ -196,16 +232,24 @@ export const assignDrone = async (req, res) => {
                 order.status = 'DRONE_ASSIGNED';
             }
             
-            // --- THÊM validateModifiedOnly: true ĐỂ TRÁNH LỖI DỮ LIỆU CŨ ---
             const updatedOrder = await order.save({ validateModifiedOnly: true });
-            // --------------------------------------------------------------
 
-            if (req.io) {
-                req.io.to(req.params.id).emit('status_update', { 
-                    status: updatedOrder.status,
-                    droneId: updatedOrder.droneId 
+            // --- GỌI SANG GATEWAY ĐỂ BẮN SOCKET ---
+            try {
+                await axios.post('http://api-gateway:3000/socket/emit', {
+                    event: 'status_update',
+                    room: req.params.id,
+                    data: { 
+                        status: updatedOrder.status,
+                        droneId: updatedOrder.droneId,
+                        _id: updatedOrder._id
+                    }
                 });
+            } catch (socketError) {
+                console.error("Socket Emit Error (Assign Drone):", socketError.message);
             }
+            // --------------------------------------
+
             res.json(updatedOrder);
         } else {
             res.status(404).json({ message: 'Không tìm thấy đơn hàng' });
@@ -216,17 +260,24 @@ export const assignDrone = async (req, res) => {
     }
 };
 
-// @desc    Xóa đơn hàng (Admin)
-// @route   DELETE /:id
+// @desc    Xóa đơn hàng (Admin)
+// @route   DELETE /:id
 export const deleteOrder = async (req, res) => {
     try {
         const order = await Order.findById(req.params.id);
         if (order) {
             await order.deleteOne();
             
-            if (req.io) {
-                 req.io.emit('admin_data_update'); // Báo Admin reload danh sách
+            // --- GỌI SANG GATEWAY ĐỂ BÁO ADMIN RELOAD ---
+            try {
+                await axios.post('http://api-gateway:3000/socket/emit', {
+                    event: 'admin_data_update',
+                    data: { message: 'Order deleted', id: req.params.id }
+                });
+            } catch (socketError) {
+                console.error("Socket Emit Error (Delete):", socketError.message);
             }
+            // --------------------------------------------
             
             res.json({ message: 'Đã xóa đơn hàng thành công' });
         } else {

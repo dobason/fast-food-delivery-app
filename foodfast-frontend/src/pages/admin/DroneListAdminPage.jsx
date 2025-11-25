@@ -66,7 +66,7 @@ const DroneListAdminPage = () => {
                                     <th className="py-3 px-6 text-left">Tên Drone</th>
                                     <th className="py-3 px-6 text-center">Trạng Thái</th>
                                     <th className="py-3 px-6 text-center">Pin (%)</th>
-                                    <th className="py-3 px-6 text-center">Vị Trí</th>
+<th className="py-3 px-6 text-center">Vị Trí</th>
                                     <th className="py-3 px-6 text-center">Hành Động</th>
                                 </tr>
                             </thead>
@@ -104,7 +104,7 @@ const DroneListAdminPage = () => {
                                         <td className="py-3 px-6 text-center">
                                             <div className="flex item-center justify-center gap-3">
                                                 <button
-                                                    onClick={() => navigate(`/admin/drone/${drone._id}/edit`)}
+onClick={() => navigate(`/admin/drone/${drone._id}/edit`)}
                                                     className="transform hover:text-indigo-500 hover:scale-110 transition"
                                                     title="Chỉnh sửa"
                                                 >

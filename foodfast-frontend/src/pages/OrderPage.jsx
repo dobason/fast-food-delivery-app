@@ -16,9 +16,21 @@ const OrderPage = () => {
   const [paymentProcessing, setPaymentProcessing] = useState(false);
 
 
-  const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
-  const DELIVERY_URL = 'http://localhost:3005';
-  const ORDER_SOCKET_URL = 'http://10.0.0.77:3003';
+// Lấy IP chuẩn từ file .env (http://10.0.0.130:3000)
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+// 1. API URL: Trỏ về Gateway
+const API_URL = BASE_URL;
+
+// 2. Delivery URL:
+// Thay vì gọi thẳng port 3005, hãy gọi qua Gateway (/api/delivery)
+// Gateway sẽ tự chuyển tiếp vào trong. Như vậy đỡ bị lỗi Firewall chặn port 3005.
+const DELIVERY_URL = `${BASE_URL}/api/delivery`;
+
+// 3. Socket URL:
+// Lúc nãy chúng ta đã cài Socket.io vào Gateway (Port 3000)
+// Nên bây giờ Socket cũng dùng chung đường với API luôn.
+const ORDER_SOCKET_URL = BASE_URL;
 
   // --- State mới cho Admin ---
   const [drones, setDrones] = useState([]);
@@ -81,7 +93,7 @@ const OrderPage = () => {
           (orderData.status === 'READY_TO_SHIP' || orderData.status === 'PREPARING')
         ) {
           try {
-            const { data: droneData } = await axios.get(`${DELIVERY_URL}/api/delivery/drones`);
+            const { data: droneData } = await axios.get(`${DELIVERY_URL}drones`);
             setDrones(droneData);
           } catch (err) {
             console.error('Lỗi kết nối Delivery Service');
